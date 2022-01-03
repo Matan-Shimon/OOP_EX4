@@ -301,8 +301,8 @@ class GraphAlgo:
         with open(file_name, 'w') as f:
             json.dump(dic, indent=2, fp=f)
 
-    def json_from_string(self, string, file_name):
-        dic = dict(string)
+    def json_from_dic(self, dic, file_name):
+        self.clear_graph()
         with open(file_name, 'w') as f:
             json.dump(dic, indent=2, fp=f)
 
