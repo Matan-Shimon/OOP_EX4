@@ -193,5 +193,6 @@ while client.is_running() == 'true':
             ttl = client.time_to_end()
             print(ttl, client.get_info())
 
+    print(client.get_agents())
     client.move()
 # game over:

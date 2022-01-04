@@ -1,0 +1,27 @@
+from Data_Structure.Edge_Data import Edge_Data
+from Data_Structure.Point2D import Point2D
+
+
+class Pokemon:
+    def __init__(self, pok_dict):
+        self.value = pok_dict['value']
+        self.type = pok_dict['type']
+        x, y, z = pok_dict['pos'].split(',')
+        self.pos = Point2D(float(x), float(y), float(z))
+        self.eaten = False
+        self.edge = None
+
+    def set_edge(self, edge: Edge_Data):
+        self.edge = edge
+
+    def eat_pokemon(self):
+        self.eaten = True
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+    def __str__(self):
+        return f"value: {self.value}, type: {self.type}, pos: {self.pos}\neaten: {self.eaten}, edge: {self.edge}"
+
+    def __repr__(self):
+        return f"value: {self.value}, type: {self.type}, pos: {self.pos}\neaten: {self.eaten}, edge: {self.edge}"
