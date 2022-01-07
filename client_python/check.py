@@ -1,5 +1,6 @@
 import time
 from types import SimpleNamespace
+from threading import Thread
 from client import Client
 import json
 from Data_Structure.GraphAlgo import GraphAlgo
@@ -20,7 +21,6 @@ HOST = '127.0.0.1'
 
 client = Client()
 client.start_connection(HOST, PORT)
-
 pokemons_str = client.get_pokemons()
 pokemons = json.loads(pokemons_str)
 print(pokemons)
@@ -62,11 +62,14 @@ for pokemon in p:
                 client.add_agent('{\"id\":'+str(edge["dest"])+'}')
     poke_list.append(poke)
 
+client.start()
+print("first place")
+print(client.get_agents())
 
 agents_str = client.get_agents()
 agents = json.loads(agents_str)
 a = agents['Agents']
-print(a)
+
 for agent in a:
     ag = Agent(agent['Agent'])
     agent_list.append(ag)
@@ -122,23 +125,53 @@ def closest_pokemon(agent1, pokemons1):
         agent1.path.append(pok.dest)
 
 def run_prog(curr_agent):
-    node = algo.graph.get_node(curr_agent.src)
+    #node = algo.graph.get_node(curr_agent.src)
     while len(curr_agent.path) > 0:
         client.choose_next_edge('{"agent_id":' + str(curr_agent.id) + ', "next_node_id":' + str(curr_agent.path[0]) + '}')
         curr_agent.set_location(algo.graph.get_node(curr_agent.path[0]).point)
-        if len(curr_agent.path) == 2:
-            node = algo.graph.get_node(curr_agent.path[0])
-        if len(curr_agent.path) == 1:
-            node_dest = algo.graph.get_node(curr_agent.path[0])
-            x_dest, y_dest = po_dest.x, po_dest.y
-            dist_src_dest = ((node.point.x - node_dest.point.x) * 2 + (node.point.y - node_dest.point.y) * 2) ** 0.5
-            dist_src_pok = ((node.point.x - curr_agent.pokemon.pos.x) * 2 + (node.point.y - curr_agent.pokemon.pos.y) * 2) ** 0.5
-            add = (dist_src_pok / dist_src_dest) * curr_agent.pokemon.edge.weight / curr_agent.speed
-            time.sleep(add)
-            client.move()
+        # if len(curr_agent.path) == 2:
+        #     node = algo.graph.get_node(curr_agent.path[0])
+        # if len(curr_agent.path) == 1:
+        #     node_dest = algo.graph.get_node(curr_agent.path[0])
+        #     x_dest, y_dest = po_dest.x, po_dest.y
+        #     dist_src_dest = ((node.point.x - node_dest.point.x) * 2 + (node.point.y - node_dest.point.y) * 2) ** 0.5
+        #     dist_src_pok = ((node.point.x - curr_agent.pokemon.pos.x) * 2 + (node.point.y - curr_agent.pokemon.pos.y) * 2) ** 0.5
+        #     add = (dist_src_pok / dist_src_dest) * curr_agent.pokemon.edge.weight / curr_agent.speed
+        #     time.sleep(add)
+        #     client.move()
         curr_agent.path.remove(0)
+        print(client.get_info())
 
 
-# client.start()
-# while client.is_running() == 'true':
-#     print("hi")
+    # 10 moves in 1 sec
+    time.sleep(0.1)
+    client.move()
+
+
+
+
+while client.is_running() == 'true':
+
+# All the gui should be added here
+
+    for agent in agent_list:
+        closest_pokemon(agent,poke_list)
+
+    print("second do")
+
+    if len(agent_list) > 1:
+        for agent in agent_list:
+            run_prog(agent)
+
+    our_threads = []
+
+    for agent in agent_list:
+        thread = Thread(target=run_prog,args=agent)
+        our_threads.append(thread)
+        thread.start()
+    i = 0
+    while our_threads[i].is_alive():
+        i += 1
+
+    for thread in our_threads:
+        thread.join()

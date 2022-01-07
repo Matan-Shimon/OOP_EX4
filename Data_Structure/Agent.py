@@ -13,6 +13,8 @@ class Agent:
         x, y, z = agent_dict["pos"].split(',')
         self.pos = Point2D(float(x), float(y), float(z))
         self.path = []
+        self.start = True
+        self.pokemon = 0
 
     def get_id(self):
         return  self.id

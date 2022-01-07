@@ -11,7 +11,9 @@ import pygame
 from pygame import *
 
 from Data_Structure.GraphAlgo import GraphAlgo
-from Data_Structure.DiGraph import DiGraph
+from Data_Structure.Pokemon import Pokemon
+from Data_Structure.Agent import Agent
+from Data_Structure.Edge_Data import Edge_Data
 
 # init pygame
 WIDTH, HEIGHT = 1080, 720
@@ -28,14 +30,10 @@ pygame.font.init()
 
 client = Client()
 client.start_connection(HOST, PORT)
-
-pokemons = client.get_pokemons()
-
-pokemons1 = json.loads(pokemons)
-
-pokemons_obj = json.loads(pokemons, object_hook=lambda d: SimpleNamespace(**d))
-
+pokemons_str = client.get_pokemons()
+pokemons = json.loads(pokemons_str)
 print(pokemons)
+print("david")
 
 graph_json = client.get_graph()
 graph_dic = json.loads(graph_json)
@@ -79,32 +77,37 @@ def my_scale(data, x=False, y=False):
 
 radius = 15
 
+# adding agents and giving them a starting node
 eps = 0.001
-p = pokemons1['Pokemons']
+p = pokemons['Pokemons']
+poke_list = []
+agent_list = []
+
 for pokemon in p:
-    x, y, z = pokemon['Pokemon']['pos'].split(',')
-    typ = pokemon['Pokemon']['type']
+    poke = Pokemon(pokemon['Pokemon'])
+    x, y, z = poke.pos.x, poke.pos.y, poke.pos.z
+    typ = poke.type
     for edge in algo.get_graph().get_edges():
+        # edge dist
         po_src = algo.get_graph().get_node(edge['src']).point
         x_src, y_src = po_src.x, po_src.y
         po_dest = algo.get_graph().get_node(edge['dest']).point
         x_dest, y_dest = po_dest.x, po_dest.y
         dist = ((x_dest - x_src) ** 2 + (y_dest - y_src) ** 2) ** 0.5
 
-        # src to pokemon
+        # src to pokemon + pokemon to dest
         d1 = ((float(x) - x_src) ** 2 + (float(y) - y_src) ** 2) ** 0.5
         d2 = ((x_dest - float(x)) ** 2 + (y_dest - float(y)) ** 2) ** 0.5
         d3 = d1 + d2
+        # checking if it's on the same edge
         if abs(d3 - dist) < eps:
+            real_edge = Edge_Data(edge['src'], edge['dest'], edge['w'], 0)
+            poke.set_edge(real_edge)
             if typ > 0:
                 client.add_agent('{\"id\":'+str(edge["src"])+'}')
-                #client.add_agent(f'{"id":{str(edge["src"])}}')
             else:
                 client.add_agent('{\"id\":'+str(edge["dest"])+'}')
-                #client.add_agent(f'{"id":{str(edge["dest"])}}')
-# client.add_agent("{\"id\":1}")
-# client.add_agent("{\"id\":2}")
-# client.add_agent("{\"id\":3}")
+    poke_list.append(poke)
 
 # this commnad starts the server - the game is running now
 client.start()
@@ -113,6 +116,124 @@ client.start()
 The code below should be improved significantly:
 The GUI and the "algo" are mixed - refactoring using MVC design pattern is required.
 """
+'''
+Function to add the right edge that the pokemon is on
+'''
+def find_pok_edge(pokemon):
+    x, y, z = pokemon.pos.x, pokemon.pos.y, pokemon.pos.z
+    typ = pokemon.type
+    for edge in algo.get_graph().get_edges():
+        # edge dist
+        po_src = algo.get_graph().get_node(edge['src']).point
+        x_src, y_src = po_src.x, po_src.y
+        po_dest = algo.get_graph().get_node(edge['dest']).point
+        x_dest, y_dest = po_dest.x, po_dest.y
+        dist = ((x_dest - x_src) ** 2 + (y_dest - y_src) ** 2) ** 0.5
+        # src to pokemon + pokemon to dest
+        d1 = ((float(x) - x_src) ** 2 + (float(y) - y_src) ** 2) ** 0.5
+        d2 = ((x_dest - float(x)) ** 2 + (y_dest - float(y)) ** 2) ** 0.5
+        d3 = d1 + d2
+        # checking if it's on the same edge
+        if abs(d3 - dist) < eps:
+            real_edge = Edge_Data(edge['src'], edge['dest'], edge['w'], 0)
+            pokemon.set_edge(real_edge)
+
+'''
+Function that checks for new pokemons that came
+'''
+def refresh_pock_list():
+    pokemons_str = client.get_pokemons()
+    print("pokes: ",pokemons_str)
+    pokemons = json.loads(pokemons_str)
+    p = pokemons['Pokemons']
+    for pokemon in p:
+        poke = Pokemon(pokemon['Pokemon'])
+        find_pok_edge(poke)
+        add = True
+        x, y = poke.pos.x, poke.pos.y
+        for our_poke in poke_list:
+            if our_poke.pos.x == float(x) and our_poke.pos.y == float(y):
+                add = False
+        if add:
+            poke_list.append(poke)
+
+
+'''
+Function to decide which next pokemon the agent will hunt
+'''
+def closest_pokemon(agent1, pokemons1):
+    max_utility = 0
+    #print("SRC: ",agent1.src)
+    algo.Dijkstra(agent1.src)
+    shortest_path = 0
+    dest = 0
+    i = 0
+    check =0
+    pok_index = 0
+    #print("POKEMONSSSS ",pokemons1)
+    for pok in pokemons1:
+        if pok.eaten == False:
+            if pok.type < 0:
+                time = algo.graph.get_node(pok.edge.src).weight / agent1.speed
+                po_dest = algo.get_graph().get_node(pok.edge.dest).point
+                po_src = algo.get_graph().get_node(pok.edge.src).point
+                x_dest, y_dest = po_dest.x, po_dest.y
+                dist_dest_pok = ((x_dest - pok.pos.x) ** 2 + (y_dest - pok.pos.y) ** 2) ** 0.5
+                dist_dest_src = ((x_dest - x_src) ** 2 + (y_dest - y_src) ** 2) ** 0.5
+                add = (dist_dest_pok / dist_dest_src) * pok.edge.weight / agent1.speed
+                time += add
+                utility = pok.value / time
+                if utility > max_utility:
+                    max_utility = utility
+                    dest = pok.edge.src
+                    pok_index = i
+                    check = 1
+            else:
+                # pok.typ > 0
+                time = algo.graph.get_node(pok.edge.dest) / agent1.speed
+                po_dest = algo.get_graph().get_node(pok.edge.src).point
+                po_src = algo.get_graph().get_node(pok.edge.dest).point
+                x_dest, y_dest = po_dest.x, po_dest.y
+                dist_src_pok = ((x_src - pok.pos.x) * 2 + (y_src - pok.pos.y) * 2) ** 0.5
+                dist_dest_src = ((x_dest - x_src) * 2 + (y_dest - y_src) * 2) ** 0.5
+                add = (dist_src_pok / dist_dest_src) * pok.edge.weight / agent1.speed
+                time += add
+                utility = pok.value / time
+                if utility > max_utility:
+                    max_utility = utility
+                    dest = pok.edge.dest
+                    pok_index = i
+                    check=2
+        i += 1
+    pokemons1[pok_index].eaten = False
+    agent1.pokemon = pokemons1[pok_index]
+    #print("CHOSEN POKEMON: ", agent1.pokemon)
+    agent1.path = algo.shortest_path(agent1.src, dest)[1]
+    print("PATH: ",agent1.path)
+    if check == 1:
+        agent1.path.append(pok.edge.dest)
+    else:
+        agent1.path.append(pok.edge.src)
+
+
+node = -1
+
+
+def run_prog(curr_agent):
+    global node
+    #print("ID:",client.get_agents())
+    while 0 < len(curr_agent.path):
+        client.choose_next_edge('{"agent_id":' + str(curr_agent.id) + ', "next_node_id":' + str(curr_agent.path[0]) + '}')
+        curr_agent.path.pop(0)
+        if len(curr_agent.path) == 1:
+            node = curr_agent.path[0]
+        #print(curr_agent.path)
+        # print(client.get_info())
+        client.move()
+    curr_agent.src = node
+    # print(poke_list)
+    #print(poke_list)
+should_run = True
 
 while client.is_running() == 'true':
     pokemons = json.loads(client.get_pokemons(),
@@ -185,13 +306,44 @@ while client.is_running() == 'true':
     clock.tick(60)
 
     # choose next edge
-    for agent in agents:
-        if agent.dest == -1:
-            next_node = (agent.src - 1) % len(graph.Nodes)
-            client.choose_next_edge(
-                '{"agent_id":'+str(agent.id)+', "next_node_id":'+str(next_node)+'}')
-            ttl = client.time_to_end()
-            print(ttl, client.get_info())
+    agents_check_str = client.get_agents()
+    agents_check = json.loads(agents_check_str)
+    a_check = agents_check['Agents']
+    ind = 0
+    # print(agent.p)
+    for agent in agent_list:
+        print("SRC: ", agent.src)
+        x1 = 0
+        x2 = 0
+        y1 = 0
+        y2 = 0
+        if agent.start == False:
+            x1 = algo.graph.get_node(node).point.x
+            id1 = algo.graph.get_node(node).node_id
+            # print("x1: ",x1,'id: ',id1)
+            y1 = algo.graph.get_node(node).point.y
+            # print(a_check[ind]['Agent']['pos'])
+            x2, y2, z2 = a_check[ind]['Agent']['pos'].split(',')
+            # print("x2: ",x2)
+        if abs(x1 - float(x2)) < eps and abs(y1 - float(y2)) < eps or agent.start:
+            if agent.start == False:
+                # print("before ",poke_list)
+                poke_list.remove(agent.pokemon)
+                # print("after ", poke_list)
+                refresh_pock_list()
+            agent.start = False
+            # print("before: ", agent.path)
+            closest_pokemon(agent, poke_list)
+            print("path: ", agent.path)
+            should_run = True
+        ind += 1
+
+    if len(agent_list) >= 1:
+        for agent in agent_list:
+            if should_run:
+                run_prog(agent)
+            should_run = False
+    client.move()
 
     print(client.get_agents())
     client.move()
