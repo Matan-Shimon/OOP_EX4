@@ -114,10 +114,6 @@ for agent in a:
     ag = Agent(agent['Agent'])
     agent_list.append(ag)
 
-"""
-The code below should be improved significantly:
-The GUI and the "algo" are mixed - refactoring using MVC design pattern is required.
-"""
 BLUE = (0,0,255)
 BLACK = (0,0,0)
 WHITE = (240,248,255)
@@ -207,18 +203,25 @@ def refresh_pock_list():
             poke_list.append(poke)
 
 should_move = 0
-
+'''
+This code below will till the server will disconnect us after a specific amount of time,
+or after we will force stop the connection from the server by clicking the "stop" button.
+'''
 while client.is_running() == 'true':
+    # loading the pokemons from the server
     pokemons = json.loads(client.get_pokemons(),
                           object_hook=lambda d: SimpleNamespace(**d)).Pokemons
     pokemons = [p.Pokemon for p in pokemons]
+    # scaling the pokemons
     for p in pokemons:
         x, y, _ = p.pos.split(',')
         p.pos = SimpleNamespace(x=my_scale(
             float(x), x=True), y=my_scale(float(y), y=True))
+    # loading the agents from the server
     agents = json.loads(client.get_agents(),
                         object_hook=lambda d: SimpleNamespace(**d)).Agents
     agents = [agent.Agent for agent in agents]
+    # scaling the agents
     for a in agents:
         x, y, _ = a.pos.split(',')
         a.pos = SimpleNamespace(x=my_scale(
@@ -327,7 +330,6 @@ while client.is_running() == 'true':
         screen.blit(agent_img, (int(agent.pos.x)-15, int(agent.pos.y)-20))
 
     pokemon_img = pygame.image.load('..\\Images\\002-pikachu.png')
-    # pokemons (note: should differ (GUI wise) between the up and the down pokemons (currently they are marked in the same way).
     for p in pokemons:
         screen.blit(pokemon_img, (int(p.pos.x)-15, int(p.pos.y)-20))
 
@@ -348,6 +350,7 @@ while client.is_running() == 'true':
         agent_list[index].pos = point
         index += 1
 
+    # checking if there are pokemons that are going to be eaten "on the way".
     for agent in agent_list:
         for pok in poke_list:
             src_ind = -1
@@ -364,7 +367,7 @@ while client.is_running() == 'true':
 
     # refresh rate
     clock.tick(60)
-    # choose next edge
+    # the proccess itself
     for agent in agent_list:
         if agent.dest == -1:
             if len(agent.path) > 0:
