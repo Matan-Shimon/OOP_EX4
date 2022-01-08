@@ -338,8 +338,8 @@ while client.is_running() == 'true':
     agents2 = json.loads(client.get_agents(),
                          object_hook=lambda d: SimpleNamespace(**d)).Agents
     agents2 = [agent.Agent for agent in agents2]
+
     index = 0
-    # print(agent_list[0].pos)
     for agent in agents2:
         agent_list[index].src = agent.src
         agent_list[index].dest = agent.dest
@@ -347,7 +347,7 @@ while client.is_running() == 'true':
         point = Point2D(float(x), float(y), 0)
         agent_list[index].pos = point
         index += 1
-    ind = 0
+
     for agent in agent_list:
         for pok in poke_list:
             src_ind = -1
@@ -358,7 +358,7 @@ while client.is_running() == 'true':
                     src_ind = ind1
                 if p == pok.edge.dest:
                     dest_ind = ind1
-                ind += 1
+                ind1 += 1
             if src_ind+1 == dest_ind:
                 pok.eaten = True
 

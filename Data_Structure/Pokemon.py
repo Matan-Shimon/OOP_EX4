@@ -11,15 +11,6 @@ class Pokemon:
         self.eaten = False
         self.edge = None
 
-    def set_edge(self, edge: Edge_Data):
-        self.edge = edge
-
-    def eat_pokemon(self):
-        self.eaten = True
-
-    def __lt__(self, other):
-        return self.value < other.value
-
     def __str__(self):
         return f"value: {self.value}, type: {self.type}, pos: {self.pos}\neaten: {self.eaten}, edge: {self.edge}"
 
