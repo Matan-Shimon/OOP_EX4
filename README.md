@@ -52,7 +52,7 @@ game | the main class that has the whole algorithm proccess.
 GUI | the class that draws everything, the graph, pokemons and agents.
 
 # UML
-https://github.com/Matan-Shimon/OOP_EX4/blob/main/Images/uml.jpeg
+![uml](https://user-images.githubusercontent.com/63747865/148679242-b02685cf-1aea-479a-b662-18cb2b8d836d.jpeg)
 
 # Simulation
 https://user-images.githubusercontent.com/63747865/148679027-8c298930-3c7f-430a-835e-c67c7a04045c.mp4
