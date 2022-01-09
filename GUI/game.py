@@ -378,3 +378,6 @@ while client.is_running() == 'true':
                 poke_list = closest_pokemon(agent, poke_list)
     pygame.time.delay(100)
     client.move()
+
+    if int(client.time_to_end()) < 20:
+        client.stop_connection()

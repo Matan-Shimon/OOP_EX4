@@ -46,6 +46,9 @@ class GraphAlgo:
     def Dijkstra(self, src):
         PQ = []
         self.setValue()
+        print(src)
+        print(self.graph.get_nodes())
+        print(self.graph.get_node(src))
         self.graph.get_node(src).setWeight(0)
         node = self.graph.get_node(src)
         heapq.heapify(PQ)
