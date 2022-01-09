@@ -1,3 +1,4 @@
+import sys
 from types import SimpleNamespace
 from client_python.client import Client
 import json
@@ -208,6 +209,10 @@ This code below will till the server will disconnect us after a specific amount 
 or after we will force stop the connection from the server by clicking the "stop" button.
 '''
 while client.is_running() == 'true':
+    if int(client.time_to_end()) < 100:
+        client.stop_connection()
+        sys.exit()
+
     # loading the pokemons from the server
     pokemons = json.loads(client.get_pokemons(),
                           object_hook=lambda d: SimpleNamespace(**d)).Pokemons
@@ -378,6 +383,3 @@ while client.is_running() == 'true':
                 poke_list = closest_pokemon(agent, poke_list)
     pygame.time.delay(100)
     client.move()
-
-    if int(client.time_to_end()) < 20:
-        client.stop_connection()
