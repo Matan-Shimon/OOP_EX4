@@ -54,9 +54,15 @@ GUI | the class that draws everything, the graph, pokemons and agents.
 # UML
 https://github.com/Matan-Shimon/OOP_EX4/blob/main/Images/uml.jpeg
 
+# Simulation
+https://user-images.githubusercontent.com/63747865/148679027-8c298930-3c7f-430a-835e-c67c7a04045c.mp4
+
+# Simulation picture
+<img width="811" alt="simulation" src="https://user-images.githubusercontent.com/63747865/148679046-351489c2-afd8-456f-b9ba-18acb8d161b6.PNG">
+
 # How to run
 1. Install python 3 on your pc.
-2. Download (clone) the project.
+2. Download the release file.
 3. open the terminal on your web development.
 4. write "java -jar Ex4_Server_v0.0.jar (0-15)", there are 15 cases, choose one you wish to do.
 5. cliick enter and run the game class.
