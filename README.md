@@ -54,6 +54,10 @@ GUI | the class that draws everything, the graph, pokemons and agents.
 # UML
 https://github.com/Matan-Shimon/OOP_EX4/blob/main/Images/uml.jpeg
 
+# Simulation
+[2022-01-09 12-31-07.zip](https://github.com/Matan-Shimon/OOP_EX4/files/7834868/2022-01-09.12-31-07.zip)
+
+
 # How to run
 1. Install python 3 on your pc.
 2. Download (clone) the project.
